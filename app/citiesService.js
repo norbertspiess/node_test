@@ -1,4 +1,4 @@
-var apiErrors = require('restify-errors');
+var BadRequestError = require('restify-errors').BadRequestError;
 var coordinateService = require('./coordinateService');
 var request = require('request');
 var sprintf = require('sprintf-js').sprintf;
@@ -12,13 +12,13 @@ function getCities(req, res, next) {
 
     if (!coordinateService.validCoordinates(latitude, longitude)) {
         console.log('parameters invalid, sending 400');
-        res.send(new apiErrors.BadRequestError('lat/lng required'));	
+        res.send(new BadRequestError('lat/lng required'));	
         return next();
     }
 
     var box = coordinateService.calculateBoundingBoxOf10KmAround(latitude, longitude);
 
-    var params = sprintf('bbox=%f,%f,%f,%f,10&appid=%s',
+    var params = sprintf('box/city?bbox=%f,%f,%f,%f,10&appid=%s',
         box.leftLongitude, box.bottomLatitude, box.rightLongitude, box.topLatitude,
         openWeatherConfig.apiKey);
     
