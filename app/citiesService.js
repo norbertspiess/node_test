@@ -32,12 +32,11 @@ function getCities(req, res, next) {
             }
 
             console.log("retrieved result: " + body);
-    
+            
             var result = [];
             response = JSON.parse(body);
             if (response.hasOwnProperty('list')) {
                 response.list.forEach(city => {
-                    f = f;
                     result.push({
                         "id": city.id,
                         "name": city.name
