@@ -4,12 +4,17 @@
   "description": "Testcase for stocard",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node app/index.js",
+    "debug": "node --nolazy --inspect-brk=8080 app/index.js",
     "test": "test"
   },
   "author": "Norbert Spiess",
   "license": "ISC",
   "dependencies": {
     "restify": "7.2.1"
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "chai": "4.1.2"
   }
 }
