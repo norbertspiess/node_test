@@ -1,7 +1,7 @@
 var apiErrors = require('restify-errors');
 var coordinateService = require('./coordinateService');
 var request = require('request');
-var s = require('sprintf-js');
+var sprintf = require('sprintf-js').sprintf;
 var openWeatherConfig = require('./openWeatherConfig');
 
 const route = '/cities';
@@ -18,7 +18,7 @@ function getCities(req, res, next) {
 
     var box = coordinateService.calculateBoundingBoxOf10KmAround(latitude, longitude);
 
-    var params = s.sprintf('bbox=%f,%f,%f,%f,10&appid=%s',
+    var params = sprintf('bbox=%f,%f,%f,%f,10&appid=%s',
         box.leftLongitude, box.bottomLatitude, box.rightLongitude, box.topLatitude,
         openWeatherConfig.apiKey);
     
@@ -26,7 +26,7 @@ function getCities(req, res, next) {
         console.log(openWeatherConfig.url + params);
         request.get(openWeatherConfig.url + params, function (error, response, body) {
             if (error || response.statusCode != 200) {
-                console.error('error on api call. ' + s.sprintf('%d: %s', response.statusCode, body));
+                console.error('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
                 reject();
                 return;
             }
