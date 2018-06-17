@@ -5,8 +5,8 @@ function calculateBoundingBoxOf10KmAround(latitude, longitude) {
     return {
         leftLongitude: longitude - longitudeModifier,
         rightLongitude: longitude + longitudeModifier,
-        topLatitude: latitude - latitudeModifier,
-        bottomLatitude: latitude + latitudeModifier
+        topLatitude: latitude + latitudeModifier,
+        bottomLatitude: latitude - latitudeModifier
     };
 }
 

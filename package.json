@@ -12,7 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "restify": "7.2.1",
-    "request": "2.87.0"
+    "request": "2.87.0",
+    "sprintf-js": "1.1.1"
   },
   "devDependencies": {
     "mocha": "5.2.0",

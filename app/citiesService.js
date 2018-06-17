@@ -1,34 +1,61 @@
 var apiErrors = require('restify-errors');
 var coordinateService = require('./coordinateService');
+var request = require('request');
+var s = require('sprintf-js');
+var openWeatherConfig = require('./openWeatherConfig');
 
 const route = '/cities';
 
 function getCities(req, res, next) {
-    var latitude = req.query.lat;
-    var longitude = req.query.lon;
+    var latitude = parseFloat(req.query.lat);
+    var longitude = parseFloat(req.query.lon);
 
-    if (areParametersInvalid(latitude, longitude)) {
+    if (!coordinateService.validCoordinates(latitude, longitude)) {
         console.log('parameters invalid, sending 400');
         res.send(new apiErrors.BadRequestError('lat/lng required'));	
         return next();
     }
 
-    latitude = parseFloat(latitude);
-    longitude = parseFloat(longitude);
-
     var box = coordinateService.calculateBoundingBoxOf10KmAround(latitude, longitude);
 
+    var params = s.sprintf('bbox=%f,%f,%f,%f,10&appid=%s',
+        box.leftLongitude, box.bottomLatitude, box.rightLongitude, box.topLatitude,
+        openWeatherConfig.apiKey);
+    
+    new Promise(function(resolve, reject) {
+        console.log(openWeatherConfig.url + params);
+        request.get(openWeatherConfig.url + params, function (error, response, body) {
+            if (error || response.statusCode != 200) {
+                console.error('error on api call. ' + s.sprintf('%d: %s', response.statusCode, body));
+                reject();
+                return;
+            }
 
-    res.send(200);
-    return next();
-}
+            console.log("retrieved result: " + body);
+    
+            var result = [];
+            response = JSON.parse(body);
+            if (response.hasOwnProperty('list')) {
+                response.list.forEach(city => {
+                    f = f;
+                    result.push({
+                        "id": city.id,
+                        "name": city.name
+                    })
+                });
+            }
+    
+            res.send(result);
+            next();
 
-function areParametersInvalid(latitude, longitude) {
-    var typeInvalid = typeof latitude != 'number' && typeof longitude != 'number';
-    latitude = parseFloat(latitude);
-    longitude = parseFloat(longitude);
-
-    return typeInvalid || !coordinateService.validCoordinates(latitude, longitude);
+            resolve();
+        });
+    })
+    .catch(e => {
+        console.error(e);
+        res.send(new Error('internal error'));
+        next();
+    });
 }
 
 module.exports = {
