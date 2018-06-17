@@ -6,12 +6,13 @@
   "scripts": {
     "start": "node app/index.js",
     "debug": "node --nolazy --inspect-brk=8080 app/index.js",
-    "test": "test"
+    "test": "mocha -R tap"
   },
   "author": "Norbert Spiess",
   "license": "ISC",
   "dependencies": {
-    "restify": "7.2.1"
+    "restify": "7.2.1",
+    "request": "2.87.0"
   },
   "devDependencies": {
     "mocha": "5.2.0",

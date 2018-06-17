@@ -1,12 +1,12 @@
 var errors = require('restify-errors');
 
-var route = '/cities';
+exports.route = '/cities';
 
-function getCities(req, res, next) {
+exports.getCities = function(req, res, next) {
     var latitude = req.query.lat;
     var longitude = req.query.lon;
 
-    if (parametersInvalid(latitude, longitude)) {
+    if (areParametersInvalid(latitude, longitude)) {
         console.log('parameters invalid, sending 400');
         res.send(new errors.BadRequestError('lat/lng required'));	
         return next();
@@ -21,8 +21,6 @@ function getCities(req, res, next) {
     return next();
 }
 
-function parametersInvalid(latitude, longitude) {
+function areParametersInvalid(latitude, longitude) {
     return typeof latitude != 'number' && typeof longitude != 'number';
 }
-
-module.exports = {route, getCities};
