@@ -11,18 +11,16 @@ function getCities(req, res, next) {
 
     if (!validCoordinates(latitude, longitude)) {
         console.log('parameters invalid, sending 400');
-        res.send(new BadRequestError('lat/lng required'));	
+        res.send(new BadRequestError('lat/lng required'));
         return next();
     }
 
-    var box = calculateBoundingBoxOf10KmAround(latitude, longitude);
+    new Promise(function (resolve, reject) {
+        var box = calculateBoundingBoxOf10KmAround(latitude, longitude);
+        var params = sprintf('box/city?bbox=%f,%f,%f,%f,10&appid=%s',
+            box.leftLongitude, box.bottomLatitude, box.rightLongitude, box.topLatitude,
+            openWeatherConfig.apiKey);
 
-    var params = sprintf('box/city?bbox=%f,%f,%f,%f,10&appid=%s',
-        box.leftLongitude, box.bottomLatitude, box.rightLongitude, box.topLatitude,
-        openWeatherConfig.apiKey);
-    
-    new Promise(function(resolve, reject) {
-        console.log(openWeatherConfig.url + params);
         request.get(openWeatherConfig.url + params, function (error, response, body) {
             if (error || response.statusCode != 200) {
                 console.error('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
@@ -31,29 +29,24 @@ function getCities(req, res, next) {
             }
 
             console.log("retrieved result: " + body);
-            
-            var result = [];
-            response = JSON.parse(body);
-            if (response.hasOwnProperty('list')) {
-                response.list.forEach(city => {
-                    result.push({
-                        "id": city.id,
-                        "name": city.name
-                    })
-                });
-            }
-    
-            res.send(result);
-            next();
 
-            resolve();
+            var cities = extractCities(body);
+
+            res.send(cities);
+            next();
         });
     })
-    .catch(e => {
-        console.error(e);
-        res.send(new Error('internal error'));
-        next();
-    });
+        .catch(e => {
+            console.error(e);
+            res.send(new Error('internal error'));
+            next();
+        });
+}
+
+function validCoordinates(latitude, longitude) {
+    var latitudeValid = latitude <= 90 && latitude >= -90;
+    var longitudeValid = longitude <= 180 && longitude >= -180;
+    return latitudeValid && longitudeValid;
 }
 
 function calculateBoundingBoxOf10KmAround(latitude, longitude) {
@@ -68,10 +61,18 @@ function calculateBoundingBoxOf10KmAround(latitude, longitude) {
     };
 }
 
-function validCoordinates(latitude, longitude) {
-    var latitudeValid = latitude <= 90 && latitude >= -90;
-    var longitudeValid = longitude <= 180 && longitude >= -180;
-    return latitudeValid && longitudeValid;
+function extractCities(responseBody) {
+    var cities = [];
+    responseBody = JSON.parse(responseBody);
+    if (responseBody.hasOwnProperty('list')) {
+        responseBody.list.forEach(city => {
+            cities.push({
+                "id": city.id,
+                "name": city.name
+            })
+        });
+    }
+    return cities;
 }
 
 module.exports = {

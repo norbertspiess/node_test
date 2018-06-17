@@ -11,17 +11,18 @@ function getCity(req, res, next) {
 
     if (!cityId) {
         console.log('parameter invalid, sending 400');
-        res.send(new BadRequestError('city Id required'));	
+        res.send(new BadRequestError('city Id required'));
         return next();
     }
 
-    var operation = sprintf('weather/?id=%s&appid=%s', cityId, openWeatherConfig.apiKey);
-    
-    new Promise(function(resolve, reject) {
-        console.log(openWeatherConfig.url + operation);
+
+
+    new Promise(function (resolve, reject) {
+        var operation = sprintf('weather/?id=%s&appid=%s', cityId, openWeatherConfig.apiKey);
+
         request.get(openWeatherConfig.url + operation, function (error, response, body) {
             if (error || response.statusCode != 200) {
-                if (response.statusCode == 404){
+                if (response.statusCode == 404) {
                     console.log("404 from open weather api, returning 404");
                     res.send(new NotFoundError('not found'));
                     next();
@@ -35,26 +36,30 @@ function getCity(req, res, next) {
             }
 
             console.log("retrieved result: " + body);
-            
-            response = JSON.parse(body);
-            var city = {
-                "id": response.id,
-                "name": response.name,
-                "lat": response.coord.lat,
-                "lon": response.coord.lon
-            };
-    
+
+            var city = extractCity(body);
+
             res.send(city);
             next();
 
             resolve();
         });
     })
-    .catch(e => {
-        console.error(e);
-        res.send(new Error('internal error'));
-        next();
-    });
+        .catch(e => {
+            console.error(e);
+            res.send(new Error('internal error'));
+            next();
+        });
+}
+
+function extractCity(responseBody) {
+    responseBody = JSON.parse(responseBody);
+    return {
+        "id": responseBody.id,
+        "name": responseBody.name,
+        "lat": responseBody.coord.lat,
+        "lon": responseBody.coord.lon
+    };
 }
 
 module.exports = {
