@@ -1,0 +1,15 @@
+{
+  "name": "stocard_backend_case",
+  "version": "0.0.1",
+  "description": "Testcase for stocard",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "test"
+  },
+  "author": "Norbert Spiess",
+  "license": "ISC",
+  "dependencies": {
+    "restify": "7.2.1"
+  }
+}
