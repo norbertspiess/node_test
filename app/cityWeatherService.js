@@ -1,5 +1,6 @@
 var BadRequestError = require('restify-errors').BadRequestError;
 var NotFoundError = require('restify-errors').NotFoundError;
+var InternalServerError = require('restify-errors').InternalServerError;
 var request = require('request');
 var sprintf = require('sprintf-js').sprintf;
 var openWeatherConfig = require('./openWeatherConfig');
@@ -20,30 +21,33 @@ function getCityWeather(req, res, next) {
 
         request.get(openWeatherConfig.url + operation, function (error, response, body) {
             if (error || response.statusCode != 200) {
-                if (response.statusCode == 404) {
-                    console.log("404 from open weather api, returning 404");
-                    res.send(new NotFoundError('not found'));
-                    next();
-                    resolve();
-                    return;
+                switch (response.statusCode) {
+                    case 404:
+                        console.log('404 from open weather api, returning 404');
+                        resolve(new NotFoundError('not found'));
+                        return;
+                    case 400:
+                        console.log('400 from open weather api, returning 400');
+                        resolve(new BadRequestError('invalid city id'));
+                        return;
+                    default:
+                        reject('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
+                        return;
                 }
-
-                console.error('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
-                reject();
-                return;
             }
 
-            console.log("retrieved result: " + body);
+            var weather = extractWeatherData(body);
 
-            res.send(extractWeatherData(body));
-            next();
-
-            resolve();
+            resolve(weather);
         });
     })
+        .then(response => {
+            res.send(response);
+            next();
+        })
         .catch(e => {
             console.error(e);
-            res.send(new Error('internal error'));
+            res.send(new InternalServerError('internal error'));
             next();
         });
 }

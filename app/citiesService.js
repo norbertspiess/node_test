@@ -1,4 +1,5 @@
 var BadRequestError = require('restify-errors').BadRequestError;
+var InternalServerError = require('restify-errors').InternalServerError;
 var request = require('request');
 var sprintf = require('sprintf-js').sprintf;
 var openWeatherConfig = require('./openWeatherConfig');
@@ -23,22 +24,21 @@ function getCities(req, res, next) {
 
         request.get(openWeatherConfig.url + params, function (error, response, body) {
             if (error || response.statusCode != 200) {
-                console.error('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
-                reject();
+                reject('error on api call. ' + sprintf('%d: %s', response.statusCode, body));
                 return;
             }
 
-            console.log("retrieved result: " + body);
-
             var cities = extractCities(body);
-
-            res.send(cities);
-            next();
+            resolve(cities);
         });
     })
+        .then(response => {
+            res.send(response);
+            next();
+        })
         .catch(e => {
             console.error(e);
-            res.send(new Error('internal error'));
+            res.send(new InternalServerError('internal error'));
             next();
         });
 }

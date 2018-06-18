@@ -19,7 +19,7 @@ describe('service: /cities/{city_id}/weather', function () {
         it('should get a 404 response', function (done) {
             sandbox.replace(request, 'get', function (url, requestCallback) {
                 requestCallback(undefined, { statusCode: 404 },
-                    '{"cod": "404", "message": "city not found"}'
+                    JSON.stringify({"cod": "404", "message": "city not found"})
                 );
             });
             request(cityWeatherUrl, function (error, response, body) {
@@ -29,7 +29,22 @@ describe('service: /cities/{city_id}/weather', function () {
             });
         });
     });
-
+    
+    describe('400 response on open weather API call', function () {
+        it('should get a 400 response', function (done) {
+            sandbox.replace(request, 'get', function (url, requestCallback) {
+                requestCallback(undefined, { statusCode: 400 },
+                    JSON.stringify({"cod": "400", "message": "any is invalid city"})
+                );
+            });
+            request(cityWeatherUrl, function (error, response, body) {
+                expect(response.statusCode).to.equal(400);
+                expect(JSON.parse(body).message).to.equal('invalid city id');
+                done();
+            });
+        });
+    });
+    
     describe('200 response on open weather API call', function () {
         it('should get a 200 response', function (done) {
             sandbox.replace(request, 'get', function (url, requestCallback) {
